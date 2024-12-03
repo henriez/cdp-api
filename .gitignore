@@ -1,0 +1,62 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node.js
+node_modules/
+dist/
+.nyc_output/
+coverage/
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# TypeScript
+*.tsbuildinfo
+
+# Database
+*.sqlite
+*.sqlite3
+*.pgsql
+*.pgdata
+*.db
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Ignore build artifacts
+build/
+dist/
+
+# Ignore TypeORM generated files
+ormconfig.json
+ormconfig.js
+ormconfig.env
+ormconfig.ts
+
+# Others
+*.tgz
+*.log
+npm-debug.log*
