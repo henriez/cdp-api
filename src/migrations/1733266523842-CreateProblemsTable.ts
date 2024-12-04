@@ -28,7 +28,7 @@ export class CreateProblemsTable1733266523842 implements MigrationInterface {
     // The sources names and hostname should match the enum ProblemSource defined in consts
     await queryRunner.query(
       `INSERT INTO problem_source (id, name, hostname) VALUES 
-        (1, 'UNKNOWN', null),
+        (1, 'UNKNOWN', 'UNKNOWN'),
         (2, 'CSES', 'cses.fi'),
         (3, 'CODEFORCES', 'codeforces.com'),
         (4, 'ATCODER', 'atcoder.jp'),
