@@ -5,6 +5,7 @@ export const ErrorMessage = {
   INVALID_HEADER: ({ header, message }) => `Invalid header ${header}${message ? `: ${message}` : ''}`,
   RESOURCE_CONFLICT: ({ message, entity }: any = {}) => message || `Resource conflict: ${entity}`,
   INTERNAL_SERVER_ERROR: ({ message }: any = {}) => message || 'Internal server error',
+  NOT_IMPLEMENTED: ({ message }: any = {}) => message || 'Not implemented',
 };
 
 export enum ErrorCode {
@@ -14,4 +15,5 @@ export enum ErrorCode {
   INVALID_HEADER = 'INVALID_HEADER',
   RESOURCE_CONFLICT = 'RESOURCE_CONFLICT',
   INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
+  NOT_IMPLEMENTED = 'NOT_IMPLEMENTED',
 }

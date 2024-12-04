@@ -2,7 +2,8 @@ import { ErrorCode } from '../../errors/validation-error-codes';
 import { ErrorMessageContext } from './interfaces';
 
 export const ERROR_MESSAGE_FACTORIES = {
-  [ErrorCode.ARRAY_MUST_NOT_BE_EMPTY]: ({ fieldName }: ErrorMessageContext) => `Field '${fieldName}' must not be empty`,
+  [ErrorCode.ARRAY_MUST_NOT_BE_EMPTY]: ({ fieldName }: ErrorMessageContext) =>
+    `'${fieldName}' must not be an empty array`,
 
   [ErrorCode.FIELD_MAX_LENGTH_EXCEEDED]: ({ fieldName, maxLength }: ErrorMessageContext) =>
     `Field '${fieldName}' must have at most ${maxLength} characters`,

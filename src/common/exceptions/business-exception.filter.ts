@@ -11,13 +11,11 @@ export class BusinessExceptionFilter implements ExceptionFilter {
 
     const errorResponse = {
       status: ResponseStatus.ERROR,
-      errors: [
-        {
-          error_code: exception.errorCode,
-          message: exception.message,
-          details: exception.details,
-        },
-      ],
+      error: {
+        error_code: exception.errorCode,
+        message: exception.message,
+        details: exception.details,
+      },
     };
 
     response.status(status).json(errorResponse);
