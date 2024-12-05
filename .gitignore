@@ -60,3 +60,4 @@ ormconfig.ts
 *.tgz
 *.log
 npm-debug.log*
+.vercel
