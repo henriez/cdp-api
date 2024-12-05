@@ -113,7 +113,7 @@ export class CreateProblemsTable1733266523842 implements MigrationInterface {
           {
             name: 'start_timestamp',
             type: 'timestamp',
-            isNullable: false, // TODO should i add a default?
+            isNullable: true,
           },
           {
             name: 'is_confirmed',

@@ -7,9 +7,11 @@ import { LogInterceptor } from './common/interceptors/log.interceptor';
 import { validationErrorFactory } from './common/errors/validationErrorFactory';
 import { BusinessExceptionFilter } from './common/exceptions/business-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AuthGuard } from './common/guards/auth.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.useGlobalGuards(new AuthGuard());
   app.useGlobalFilters(new BusinessExceptionFilter());
   app.useGlobalInterceptors(new LogInterceptor());
   app.useGlobalPipes(
