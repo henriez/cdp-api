@@ -6,11 +6,30 @@ import { BusinessException } from 'src/common/exceptions/business.exception';
 import { ErrorCode } from 'src/common/errors/error-codes';
 import { ProblemRepository } from './repositories/problem.repository';
 import { Problem } from './entities/problem.entity';
-import { ProblemSource } from 'src/utils/consts';
+import { ProblemDifficulty, ProblemSource } from 'src/utils/consts';
+import { ProblemDifficulty as ProblemDifficultyEntity } from './entities/problem-difficulty.entity';
+import { Contest } from './entities/contest.entity';
+import { ContestProblem } from './entities/contest-problem.entity';
+import { ContestsRepository } from './repositories/contest.repository';
+import { AtcoderService } from './atcoder.service';
+import { CodeforcesService } from './codeforces.service';
 
 @Injectable()
 export class ProblemService {
-  constructor(private readonly problemsRepository: ProblemRepository) {}
+  constructor(
+    private readonly atcoderService: AtcoderService,
+    private readonly codeforcesService: CodeforcesService,
+    private readonly problemsRepository: ProblemRepository,
+    private readonly contestsRepository: ContestsRepository,
+  ) {}
+
+  private getProblemQuantityByDifficulty(difficulty: ProblemDifficulty) {
+    if (difficulty === ProblemDifficulty.APPRENTICE) return 3;
+    if (difficulty === ProblemDifficulty.JOURNEYMAN) return 1;
+    if (difficulty === ProblemDifficulty.ADEPT) return 2;
+    if (difficulty === ProblemDifficulty.ELITE) return 1;
+    if (difficulty === ProblemDifficulty.LEGENDARY) return 3;
+  }
 
   /**
    * Gets the problem's source enum element if it matches, UNKNOWN if none match
@@ -30,9 +49,11 @@ export class ProblemService {
    * @param problemDto the problem to be created
    * @returns a promise that resolves in the problem data
    */
-  async createProblem(problemDto: CreateProblemDTO): Promise<ProblemDTO> {
+  async createProblem(problemDto: CreateProblemDTO): Promise<Problem> {
+    // TODO add parameter for ignoring user linking, will be used when fetching from external apis
     let problem = await this.problemsRepository.findByURL(problemDto.url);
     const problemSource = this.getProblemSource(problemDto.url);
+    const problemSourceEntity = await this.problemsRepository.findProblemSource(problemSource);
     if (problem) {
       problem.updatedAt = new Date();
       // TODO: add one more user link
@@ -46,7 +67,7 @@ export class ProblemService {
       problem.url = problemDto.url;
       problem.title = problemDto.title;
       problem.description = problemDto.description;
-      problem.idProblemSource = (await this.problemsRepository.findProblemSource(problemSource)).id;
+      problem.idProblemSource = problemSourceEntity.id;
       problem.isUsed = false;
       await this.problemsRepository.insert(problem);
     }
@@ -65,18 +86,57 @@ export class ProblemService {
     );
     // TODO: sort based on difficulty level
     difficulties.push(...existentDifficulties.filter((diff) => !difficulties.some((d) => d.name === diff.name)));
-    return problem.toDto(problemSource, difficulties);
+    problem.problemSource = problemSourceEntity;
+    problem.problemDifficulties = difficulties.map((d) => {
+      const pde = new ProblemDifficultyEntity();
+      pde.difficulty = d;
+      return pde;
+    });
+    return problem;
   }
 
   /**
-   * Creates a contest based on multiple difficulty levels. At first, it'll try to fetch problems from our repository.
+   * Creates a contest based on multiple difficulty levels using the pattern (3,1,2,1,3). At first, it'll try to fetch problems from our repository.
    * If it fails in fetching, then it fetches from Atcoder and Codeforces APIs. If event that fails, throws an descriptive error
    * @returns a promise that resolves in the constest data, including the selected problems
    */
-  async createContest(): Promise<ContestDTO> {
-    // TODO: implement
-    // TODO: create contest entity
-    throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, HttpStatus.NOT_IMPLEMENTED);
+  async createContest(): Promise<Contest> {
+    const contest = new Contest();
+    contest.isConfirmed = false;
+    await this.contestsRepository.insert(contest);
+    const contestProblems: ContestProblem[] = [];
+
+    await Promise.all(
+      Object.values(ProblemDifficulty).map(async (diff) => {
+        const qty = this.getProblemQuantityByDifficulty(diff);
+        let problems = await this.problemsRepository.findManyByDifficulty(diff, qty);
+        // if there ain't enough problems on the repository, fetch some random problems and register them
+        if (problems.length < qty) {
+          const problemsDtos = await this.fetchProblems(diff, qty);
+          problems = await Promise.all(problemsDtos.map((problem) => this.createProblem(problem)));
+        }
+        contestProblems.push(
+          ...(await Promise.all(
+            problems.map((problem) => {
+              const contestProblem = new ContestProblem();
+              contestProblem.idContest = contest.id;
+              contestProblem.idProblem = problem.id;
+              contestProblem.contest = contest;
+              contestProblem.problem = problem;
+              this.contestsRepository.saveContestProblem(contestProblem);
+              return contestProblem;
+            }),
+          )),
+        );
+      }),
+    );
+    contest.contestProblems = contestProblems;
+    return contest;
+  }
+
+  private async fetchProblems(diff: ProblemDifficulty, numProblems: number): Promise<CreateProblemDTO[]> {
+    // return this.atcoderService.fetchAtcoderProblems(diff, numProblems);
+    return this.codeforcesService.fetchCodeforcesProblems(diff, numProblems);
   }
 
   /**
@@ -84,18 +144,60 @@ export class ProblemService {
    * @param id the contest to be confirmed
    * @returns a promise that resolves when the contest is confirmed
    */
-  async confirmContest(id: number): Promise<void> {
-    // TODO: implement
-    throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, HttpStatus.NOT_IMPLEMENTED);
+  async confirmContest(id: number, startTimestamp: Date): Promise<void> {
+    const contest = await this.contestsRepository.findById(id);
+
+    if (!contest) {
+      throw new BusinessException(ErrorCode.ENTITY_NOT_FOUND, HttpStatus.NOT_FOUND, {
+        message: `Contest ${id} not found`,
+      });
+    }
+
+    if (contest.isConfirmed) {
+      throw new BusinessException(ErrorCode.RESOURCE_CONFLICT, HttpStatus.CONFLICT, {
+        message: 'This contest is already confirmed',
+      });
+    }
+
+    contest.startTimestamp = startTimestamp;
+    contest.isConfirmed = true;
+    await this.contestsRepository.update(contest);
+
+    // mark contest problems as used
+    const problems = await this.problemsRepository.findManyByContest(id);
+    await Promise.all(
+      problems.map((p) => {
+        p.isUsed = true;
+        this.problemsRepository.update(p);
+      }),
+    );
   }
 
-  /**
-   * Deletes a contest. If the contest is confirmed, throws a descriptive error
-   * @param id the unconfirmed contest to be deleted
-   * @returns a promise that resolves in the deleted contest data
-   */
-  async deleteContest(id: number): Promise<ContestDTO> {
-    // TODO: implement
-    throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, HttpStatus.NOT_IMPLEMENTED);
+  async disconfirmContest(id: number): Promise<void> {
+    const contest = await this.contestsRepository.findById(id);
+
+    if (!contest) {
+      throw new BusinessException(ErrorCode.ENTITY_NOT_FOUND, HttpStatus.NOT_FOUND, {
+        message: `Contest ${id} not found`,
+      });
+    }
+
+    if (!contest.isConfirmed) {
+      throw new BusinessException(ErrorCode.RESOURCE_CONFLICT, HttpStatus.CONFLICT, {
+        message: 'This contest is already not confirmed',
+      });
+    }
+
+    contest.isConfirmed = false;
+    await this.contestsRepository.update(contest);
+
+    // mark contest problems as not used
+    const problems = await this.problemsRepository.findManyByContest(id);
+    await Promise.all(
+      problems.map((p) => {
+        p.isUsed = false;
+        this.problemsRepository.update(p);
+      }),
+    );
   }
 }

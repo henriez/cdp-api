@@ -37,6 +37,14 @@ export class ProblemRepository extends BaseRepository {
     return this.repo.findOne({ where: { url } });
   }
 
+  async findManyByContest(idContest: number): Promise<Problem[]> {
+    return this.repo
+      .createQueryBuilder('p')
+      .innerJoinAndSelect('p.contestProblems', 'cp')
+      .where('cp.idContest = :idContest', { idContest })
+      .getMany();
+  }
+
   async findOneBySource(source: ProblemSource): Promise<Problem> {
     const problemSource = await this.getRepository(ProblemSourceEntity).findOne({ where: { name: source } }); // TODO: test this
     return this.repo.findOne({ where: { idProblemSource: problemSource.id } });
@@ -47,29 +55,37 @@ export class ProblemRepository extends BaseRepository {
     return this.repo.find({ where: { idProblemSource: problemSource.id } });
   }
 
-  async findOneByDifficulty(): Promise<Problem> {
-    // TODO: implement
-    // this should be really simullar to fetching by source
-    throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, HttpStatus.NOT_IMPLEMENTED);
+  async findOneByDifficulty(difficulty: ProblemDifficulty): Promise<Problem> {
+    return this.repo
+      .createQueryBuilder('p')
+      .innerJoinAndSelect('p.problemDifficulties', 'pd')
+      .innerJoinAndSelect('pd.difficulty', 'd')
+      .where('d.name = :difficulty', { difficulty })
+      .getOne();
   }
 
-  async findManyByDifficulty(): Promise<Problem[]> {
-    // TODO: implement
-    // TODO: add custom limit
-    // this should be really simullar to fetching by source
-    throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, HttpStatus.NOT_IMPLEMENTED);
+  async findManyByDifficulty(difficulty: ProblemDifficulty, limit?: number): Promise<Problem[]> {
+    let query = this.repo
+      .createQueryBuilder('p')
+      .innerJoinAndSelect('p.problemSource', 'ps')
+      .innerJoinAndSelect('p.problemDifficulties', 'pd')
+      .innerJoinAndSelect('pd.difficulty', 'd')
+      .where('d.name = :difficulty', { difficulty })
+      .orderBy('RANDOM()');
+    if (limit) query = query.limit(limit);
+    return query.getMany();
   }
 
   async findOneByTag(): Promise<Problem> {
     // TODO: implement
-    // this should be really simullar to fetching by source
+    // this should be really simullar to fetching by difficulty
     throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, HttpStatus.NOT_IMPLEMENTED);
   }
 
   async findManyByTag(): Promise<Problem[]> {
     // TODO: implement
     // TODO: add custom limit
-    // this should be really simullar to fetching by source
+    // this should be really simullar to fetching by difficulty
     throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, HttpStatus.NOT_IMPLEMENTED);
   }
 

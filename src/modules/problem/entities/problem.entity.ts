@@ -44,16 +44,16 @@ export class Problem {
   @OneToMany(() => ProblemDifficultyEntity, (problemDifficulty) => problemDifficulty.problem)
   problemDifficulties: ProblemDifficultyEntity[];
 
-  toDto(source: ProblemSource, difficulties: Difficulty[]): ProblemDTO {
+  toDto(): ProblemDTO {
     const dto = new ProblemDTO();
     dto.id = this.id;
     dto.title = this.title ?? undefined;
     dto.description = this.description ?? undefined;
-    dto.problemSource = source;
+    dto.problemSource = ProblemSource[this.problemSource.name];
     dto.url = this.url;
     dto.createdAt = this.createdAt;
     dto.updatedAt = this.updatedAt;
-    dto.difficulties = difficulties.map((d): ProblemDifficulty => ProblemDifficulty[d.name]);
+    dto.difficulties = this.problemDifficulties.map((pd) => ProblemDifficulty[pd.difficulty.name]);
     return dto;
   }
 }
