@@ -1,7 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateProblemDTO } from './dto/create-problem.dto';
-import { ProblemDTO } from './dto/problem.dto';
-import { ContestDTO } from './dto/contest.dto';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { ErrorCode } from 'src/common/errors/error-codes';
 import { ProblemRepository } from './repositories/problem.repository';
@@ -11,14 +9,12 @@ import { ProblemDifficulty as ProblemDifficultyEntity } from './entities/problem
 import { Contest } from './entities/contest.entity';
 import { ContestProblem } from './entities/contest-problem.entity';
 import { ContestsRepository } from './repositories/contest.repository';
-import { AtcoderService } from './atcoder.service';
-import { CodeforcesService } from './codeforces.service';
+import { ProblemFetcherService } from './problem-fetcher/problem-fetcher.service';
 
 @Injectable()
 export class ProblemService {
   constructor(
-    private readonly atcoderService: AtcoderService,
-    private readonly codeforcesService: CodeforcesService,
+    private readonly problemFetcherService: ProblemFetcherService,
     private readonly problemsRepository: ProblemRepository,
     private readonly contestsRepository: ContestsRepository,
   ) {}
@@ -135,8 +131,7 @@ export class ProblemService {
   }
 
   private async fetchProblems(diff: ProblemDifficulty, numProblems: number): Promise<CreateProblemDTO[]> {
-    // return this.atcoderService.fetchAtcoderProblems(diff, numProblems);
-    return this.codeforcesService.fetchCodeforcesProblems(diff, numProblems);
+    return this.problemFetcherService.fetchProblems(diff, numProblems);
   }
 
   /**

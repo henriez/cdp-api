@@ -1,10 +1,11 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ProblemDifficulty } from 'src/utils/consts';
-import { CreateProblemDTO } from './dto/create-problem.dto';
+import { CreateProblemDTO } from '../dto/create-problem.dto';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { ErrorCode } from 'src/common/errors/error-codes';
+import { ExternalProblemsFetcherService } from './external-fetcher.service';
 
 class AtcoderProblem {
   id: string;
@@ -30,7 +31,7 @@ class AtcoderProblemModel {
 }
 
 @Injectable()
-export class AtcoderService {
+export class AtcoderService implements ExternalProblemsFetcherService {
   constructor(private readonly httpService: HttpService) {}
 
   // keep these responses from the kenkoooo's API so i dont need to request it again for other difficulties in this request
@@ -80,7 +81,7 @@ export class AtcoderService {
    * @param numProblems the amount of problems the method should return
    * @returns a promise that resolves in the array of selected problems
    */
-  async fetchAtcoderProblems(difficulty: ProblemDifficulty, numProblems: number): Promise<CreateProblemDTO[]> {
+  async fetchProblems(difficulty: ProblemDifficulty, numProblems: number): Promise<CreateProblemDTO[]> {
     const urlProblems = 'https://kenkoooo.com/atcoder/resources/problems.json';
     const urlProblemsDetails = 'https://kenkoooo.com/atcoder/resources/problem-models.json';
 
@@ -108,7 +109,9 @@ export class AtcoderService {
       }
       return problems;
     } catch (error) {
-      throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: 'Failed to fetch problems from atcoder' + error,
+      });
     }
   }
 }

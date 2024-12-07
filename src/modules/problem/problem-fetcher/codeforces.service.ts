@@ -1,10 +1,11 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ProblemDifficulty } from 'src/utils/consts';
-import { CreateProblemDTO } from './dto/create-problem.dto';
+import { CreateProblemDTO } from '../dto/create-problem.dto';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { BusinessException } from 'src/common/exceptions/business.exception';
 import { ErrorCode } from 'src/common/errors/error-codes';
+import { ExternalProblemsFetcherService } from './external-fetcher.service';
 
 class CodeforcesProblem {
   contestId: number;
@@ -15,7 +16,7 @@ class CodeforcesProblem {
 }
 
 @Injectable()
-export class CodeforcesService {
+export class CodeforcesService implements ExternalProblemsFetcherService {
   constructor(private readonly httpService: HttpService) {}
 
   private shuffleArray<T>(array: T[]): T[] {
@@ -55,7 +56,7 @@ export class CodeforcesService {
    * @param numProblems the amount of problems the method should return
    * @returns a promise that resolves in the array of selected problems
    */
-  async fetchCodeforcesProblems(difficulty: ProblemDifficulty, numProblems: number): Promise<CreateProblemDTO[]> {
+  async fetchProblems(difficulty: ProblemDifficulty, numProblems: number): Promise<CreateProblemDTO[]> {
     const urlProblems = 'https://codeforces.com/api/problemset.problems';
 
     try {
@@ -80,7 +81,9 @@ export class CodeforcesService {
       }
       return problems;
     } catch (error) {
-      throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: 'Failed to fetch problems from codeforces',
+      });
     }
   }
 }

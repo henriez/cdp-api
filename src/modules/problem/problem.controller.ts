@@ -1,4 +1,4 @@
-import { HttpCode, Controller, Post, Param, Body, HttpStatus, Patch } from '@nestjs/common';
+import { HttpCode, Controller, Post, Param, Body, HttpStatus, Patch, Get, Query } from '@nestjs/common';
 import { ApiExtraModels, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { ProblemService } from './problem.service';
 import { IdDTO } from 'src/common/dto/id.dto';
@@ -6,12 +6,18 @@ import { ContestDTO } from './dto/contest.dto';
 import { ProblemDTO } from './dto/problem.dto';
 import { CreateProblemDTO } from './dto/create-problem.dto';
 import { ConfirmContestDTO } from './dto/confirm-contest.dto';
+import { RandomProblemDTO } from './dto/random-problem.dto';
+import { DifficultiesDistributionDTO } from './dto/difficulties-distribution.dto';
+import { ProblemFetcherService } from './problem-fetcher/problem-fetcher.service';
 
 @Controller('problems')
 @ApiTags('problems')
-@ApiExtraModels(ProblemDTO, ContestDTO)
+@ApiExtraModels(ProblemDTO, ContestDTO, RandomProblemDTO)
 export class ProblemsController {
-  constructor(private readonly problemService: ProblemService) {}
+  constructor(
+    private readonly problemService: ProblemService,
+    private readonly problemFetcherService: ProblemFetcherService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -63,5 +69,19 @@ export class ProblemsController {
   // TODO: add other response descriptions for Unauthorized, not found and not confirmed
   async disconfirmContest(@Param() { id }: IdDTO): Promise<void> {
     await this.problemService.disconfirmContest(id);
+  }
+
+  @Get('contests/random')
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description:
+      "Returns the created contest's data. OBSERVATION: this endpoint will try to fetch existent problems in our repository, and if it fails in doing that, it will fetch some sample problems from Atcoder and Codeforces",
+    schema: {
+      $ref: getSchemaPath(ContestDTO),
+    },
+  })
+  async getRandomProblems(@Query() difficulties: DifficultiesDistributionDTO): Promise<RandomProblemDTO[]> {
+    return await this.problemFetcherService.fetchRandomProblems(difficulties);
   }
 }

@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArrayNotEmpty, IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
 import { ProblemDifficulty } from 'src/utils/consts';
+import { RandomProblemDTO } from './random-problem.dto';
 
 export class CreateProblemDTO {
   @ApiProperty({ description: "The problem's title", example: 'Teleporting Takahashi 2', required: false })
@@ -37,4 +38,11 @@ export class CreateProblemDTO {
   @IsNotEmpty()
   @IsEnum(ProblemDifficulty, { each: true, context: { enum: ProblemDifficulty } })
   difficulties: ProblemDifficulty[];
+
+  toRandomProblemDTO(): RandomProblemDTO {
+    const dto = new RandomProblemDTO();
+    dto.difficulty = this.difficulties[0];
+    dto.url = this.url;
+    return dto;
+  }
 }
