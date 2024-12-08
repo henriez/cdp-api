@@ -1,13 +1,13 @@
 import { HttpStatus, Inject, Injectable, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
-import { BaseRepository } from 'src/common/base.repository';
+import { BaseRepository } from '../../../common/base.repository';
 import { DataSource, Repository } from 'typeorm';
 import { Problem } from '../entities/problem.entity';
-import { ProblemDifficulty, ProblemSource } from 'src/utils/consts';
+import { ProblemDifficulty, ProblemSource } from '../../..//utils/consts';
 import { ProblemSource as ProblemSourceEntity } from '../entities/problem-source.entity';
-import { ErrorCode } from 'src/common/errors/error-codes';
-import { BusinessException } from 'src/common/exceptions/business.exception';
+import { ErrorCode } from '../../../common/errors/error-codes';
+import { BusinessException } from '../../..//common/exceptions/business.exception';
 import { ProblemDifficulty as ProblemDifficultyEntity } from '../entities/problem-difficulty.entity';
 import { Difficulty } from '../entities/difficulty.entity';
 

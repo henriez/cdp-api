@@ -1,7 +1,7 @@
 import { Inject, Injectable, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
-import { BaseRepository } from 'src/common/base.repository';
+import { BaseRepository } from '../../../common/base.repository';
 import { DataSource, Repository } from 'typeorm';
 import { Contest } from '../entities/contest.entity';
 import { ContestProblem } from '../entities/contest-problem.entity';

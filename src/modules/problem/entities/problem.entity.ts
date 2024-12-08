@@ -2,9 +2,8 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColum
 import { ProblemSource as ProblemSourceEntity } from './problem-source.entity';
 import { ContestProblem } from './contest-problem.entity';
 import { ProblemDTO } from '../dto/problem.dto';
-import { ProblemDifficulty, ProblemSource } from 'src/utils/consts';
+import { ProblemDifficulty, ProblemSource } from '../../../utils/consts';
 import { ProblemDifficulty as ProblemDifficultyEntity } from './problem-difficulty.entity';
-import { Difficulty } from './difficulty.entity';
 
 @Entity({ name: 'problem' })
 export class Problem {
@@ -49,11 +48,11 @@ export class Problem {
     dto.id = this.id;
     dto.title = this.title ?? undefined;
     dto.description = this.description ?? undefined;
-    dto.problemSource = ProblemSource[this.problemSource.name];
+    dto.problemSource = ProblemSource[this.problemSource?.name];
     dto.url = this.url;
     dto.createdAt = this.createdAt;
     dto.updatedAt = this.updatedAt;
-    dto.difficulties = this.problemDifficulties.map((pd) => ProblemDifficulty[pd.difficulty.name]);
+    dto.difficulties = this.problemDifficulties?.map((pd) => ProblemDifficulty[pd?.difficulty?.name]);
     return dto;
   }
 }

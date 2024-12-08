@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArrayNotEmpty, IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
-import { ProblemDifficulty } from 'src/utils/consts';
+import { ProblemDifficulty } from '../../../utils/consts';
 import { RandomProblemDTO } from './random-problem.dto';
 
 export class CreateProblemDTO {

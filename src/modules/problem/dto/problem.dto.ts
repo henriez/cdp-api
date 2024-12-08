@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ProblemDifficulty, ProblemSource } from 'src/utils/consts';
+import { ProblemDifficulty, ProblemSource } from '../../../utils/consts';
 
 export class ProblemDTO {
   @ApiProperty({ example: 123 })

@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { ProblemDifficulty } from 'src/utils/consts';
+import { ProblemDifficulty } from '../../../utils/consts';
 import { CreateProblemDTO } from '../dto/create-problem.dto';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { BusinessException } from 'src/common/exceptions/business.exception';
-import { ErrorCode } from 'src/common/errors/error-codes';
+import { BusinessException } from '../../../common/exceptions/business.exception';
+import { ErrorCode } from '../../../common/errors/error-codes';
 import { ExternalProblemsFetcherService } from './external-fetcher.service';
 
 class CodeforcesProblem {

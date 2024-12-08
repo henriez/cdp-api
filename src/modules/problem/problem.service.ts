@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateProblemDTO } from './dto/create-problem.dto';
-import { BusinessException } from 'src/common/exceptions/business.exception';
-import { ErrorCode } from 'src/common/errors/error-codes';
+import { BusinessException } from '../../common/exceptions/business.exception';
+import { ErrorCode } from '../..//common/errors/error-codes';
 import { ProblemRepository } from './repositories/problem.repository';
 import { Problem } from './entities/problem.entity';
-import { ProblemDifficulty, ProblemSource } from 'src/utils/consts';
+import { ProblemDifficulty, ProblemSource } from '../..//utils/consts';
 import { ProblemDifficulty as ProblemDifficultyEntity } from './entities/problem-difficulty.entity';
 import { Contest } from './entities/contest.entity';
 import { ContestProblem } from './entities/contest-problem.entity';

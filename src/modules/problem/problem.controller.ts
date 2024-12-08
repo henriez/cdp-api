@@ -1,7 +1,7 @@
 import { HttpCode, Controller, Post, Param, Body, HttpStatus, Patch, Get, Query } from '@nestjs/common';
 import { ApiExtraModels, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { ProblemService } from './problem.service';
-import { IdDTO } from 'src/common/dto/id.dto';
+import { IdDTO } from '../../common/dto/id.dto';
 import { ContestDTO } from './dto/contest.dto';
 import { ProblemDTO } from './dto/problem.dto';
 import { CreateProblemDTO } from './dto/create-problem.dto';

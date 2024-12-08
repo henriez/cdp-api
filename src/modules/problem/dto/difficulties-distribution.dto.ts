@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Min, Max, IsOptional } from 'class-validator';
-import { Is32bitInteger } from 'src/common/decorators/is32bitInteger.decorator';
+import { Is32bitInteger } from '../../../common/decorators/is32bitInteger.decorator';
 
 export class DifficultiesDistributionDTO {
   @ApiProperty({

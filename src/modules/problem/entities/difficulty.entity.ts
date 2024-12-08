@@ -9,11 +9,9 @@ export class Difficulty {
   @Column()
   name: string;
 
-  @Column()
-  description: string;
+  @Column({ nullable: true })
+  description?: string;
 
   @OneToMany(() => ProblemDifficulty, (problemDifficulty) => problemDifficulty.difficulty)
   problemDifficulties: ProblemDifficulty[];
-
-  // TODO: add a method to convert it to a ContestDTO
 }

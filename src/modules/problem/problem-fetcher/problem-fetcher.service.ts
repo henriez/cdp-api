@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AtcoderService } from './atcoder.service';
 import { CodeforcesService } from './codeforces.service';
 import { DifficultiesDistributionDTO } from '../dto/difficulties-distribution.dto';
-import { ProblemDifficulty } from 'src/utils/consts';
+import { ProblemDifficulty } from '../../../utils/consts';
 import { RandomProblemDTO } from '../dto/random-problem.dto';
 import { CreateProblemDTO } from '../dto/create-problem.dto';
 import { ExternalProblemsFetcherService } from './external-fetcher.service';
@@ -38,12 +38,5 @@ export class ProblemFetcherService {
     const problems: RandomProblemDTO[] = [];
     results.forEach((parr) => problems.push(...parr.map((p) => p.toRandomProblemDTO())));
     return problems;
-  }
-
-  async fetchAtcoderProblems(difficulty: ProblemDifficulty, numProblems: number): Promise<CreateProblemDTO[]> {
-    if (Math.round(Math.random())) {
-      return this.atcoderService.fetchProblems(difficulty, numProblems);
-    }
-    return this.codeforcesService.fetchProblems(difficulty, numProblems);
   }
 }

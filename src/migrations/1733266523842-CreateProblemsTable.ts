@@ -179,6 +179,7 @@ export class CreateProblemsTable1733266523842 implements MigrationInterface {
           {
             name: 'description',
             type: 'varchar',
+            isNullable: true,
           },
         ],
       }),
