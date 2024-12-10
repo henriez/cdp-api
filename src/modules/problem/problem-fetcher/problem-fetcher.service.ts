@@ -22,21 +22,27 @@ export class ProblemFetcherService {
   }
 
   async fetchRandomProblems(difficulties: DifficultiesDistributionDTO): Promise<RandomProblemDTO[]> {
-    const fetcher: ExternalProblemsFetcherService = Math.round(Math.random())
-      ? this.atcoderService
-      : this.codeforcesService;
-    const promises = [
-      fetcher.fetchProblems(ProblemDifficulty.APPRENTICE, difficulties.apprentice),
-      fetcher.fetchProblems(ProblemDifficulty.JOURNEYMAN, difficulties.journeyman),
-      fetcher.fetchProblems(ProblemDifficulty.ADEPT, difficulties.adept),
-      fetcher.fetchProblems(ProblemDifficulty.ELITE, difficulties.elite),
-      fetcher.fetchProblems(ProblemDifficulty.LEGENDARY, difficulties.legendary),
-    ];
+    const promises = [];
+
+    let fetcher = this.getRandomFetcher();
+    promises.push(fetcher.fetchProblems(ProblemDifficulty.APPRENTICE, difficulties.apprentice));
+    fetcher = this.getRandomFetcher();
+    promises.push(fetcher.fetchProblems(ProblemDifficulty.JOURNEYMAN, difficulties.journeyman));
+    fetcher = this.getRandomFetcher();
+    promises.push(fetcher.fetchProblems(ProblemDifficulty.ADEPT, difficulties.adept));
+    fetcher = this.getRandomFetcher();
+    promises.push(fetcher.fetchProblems(ProblemDifficulty.ELITE, difficulties.elite));
+    fetcher = this.getRandomFetcher();
+    promises.push(fetcher.fetchProblems(ProblemDifficulty.LEGENDARY, difficulties.legendary));
 
     const results = await Promise.all(promises);
 
     const problems: RandomProblemDTO[] = [];
     results.forEach((parr) => problems.push(...parr.map((p) => p.toRandomProblemDTO())));
     return problems;
+  }
+
+  private getRandomFetcher(): ExternalProblemsFetcherService {
+    return Math.round(Math.random()) ? this.atcoderService : this.codeforcesService;
   }
 }

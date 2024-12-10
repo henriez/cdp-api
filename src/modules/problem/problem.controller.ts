@@ -1,5 +1,5 @@
 import { HttpCode, Controller, Post, Param, Body, HttpStatus, Patch, Get, Query } from '@nestjs/common';
-import { ApiExtraModels, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
+import { ApiExtraModels, ApiOperation, ApiQuery, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { ProblemService } from './problem.service';
 import { IdDTO } from '../../common/dto/id.dto';
 import { ContestDTO } from './dto/contest.dto';
@@ -12,7 +12,7 @@ import { ProblemFetcherService } from './problem-fetcher/problem-fetcher.service
 
 @Controller('problems')
 @ApiTags('problems')
-@ApiExtraModels(ProblemDTO, ContestDTO, RandomProblemDTO)
+@ApiExtraModels(ProblemDTO, ContestDTO, RandomProblemDTO, DifficultiesDistributionDTO)
 export class ProblemsController {
   constructor(
     private readonly problemService: ProblemService,
@@ -21,6 +21,9 @@ export class ProblemsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    description: 'Creates a problem, if the problem already exists, it is upserted and the users submission saved',
+  })
   @ApiResponse({
     status: HttpStatus.CREATED,
     description:
@@ -36,6 +39,10 @@ export class ProblemsController {
 
   @Post('contests')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    description:
+      'Creates a contest using the default difficulty distribution, if there is not enough problems in the database, will query Atcoder and Codeforces',
+  })
   @ApiResponse({
     status: HttpStatus.CREATED,
     description:
@@ -45,12 +52,16 @@ export class ProblemsController {
     },
   })
   // TODO: create a custom decorator for Unauthorized
-  async createContest(): Promise<ContestDTO> {
-    return (await this.problemService.createContest()).toDto();
+  async createContest(@Query() difficulties: DifficultiesDistributionDTO): Promise<ContestDTO> {
+    return (await this.problemService.createContest(difficulties)).toDto();
   }
 
   @Patch('contests/:id/confirm')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    description:
+      'Confirms a contest given its id and the start time, throws error if contest is not found or is already confirmed',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returns OK if contest was confirmed',
@@ -62,6 +73,9 @@ export class ProblemsController {
 
   @Patch('contests/:id/disconfirm')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    description: 'Disconfirms a contest given its id, throws error if contest is not found or is already not confirmed',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returns OK if contest was disconfirmed',
@@ -73,13 +87,16 @@ export class ProblemsController {
 
   @Get('contests/random')
   @HttpCode(HttpStatus.OK)
-  @ApiResponse({
-    status: HttpStatus.CREATED,
+  @ApiOperation({
     description:
-      "Returns the created contest's data. OBSERVATION: this endpoint will try to fetch existent problems in our repository, and if it fails in doing that, it will fetch some sample problems from Atcoder and Codeforces",
-    schema: {
-      $ref: getSchemaPath(ContestDTO),
-    },
+      'Creates a random contest given a difficulty distribution from a random external API, throws error if the selected external API is not available',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description:
+      "Returns the random contest's data. OBSERVATION: this endpoint will try to fetch problems only from external providers, such as Atcoder or Codeforces",
+    isArray: true,
+    type: RandomProblemDTO,
   })
   async getRandomProblems(@Query() difficulties: DifficultiesDistributionDTO): Promise<RandomProblemDTO[]> {
     return await this.problemFetcherService.fetchRandomProblems(difficulties);

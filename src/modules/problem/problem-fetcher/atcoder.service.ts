@@ -63,15 +63,15 @@ export class AtcoderService implements ExternalProblemsFetcherService {
   private getAtcoderRange(difficulty: ProblemDifficulty): [number, number] {
     switch (difficulty) {
       case ProblemDifficulty.APPRENTICE:
-        return [0, 399];
+        return [0, 299];
       case ProblemDifficulty.JOURNEYMAN:
-        return [400, 799];
+        return [300, 699];
       case ProblemDifficulty.ADEPT:
-        return [800, 1199];
+        return [700, 999];
       case ProblemDifficulty.ELITE:
-        return [1200, 1599];
+        return [1000, 1299];
       case ProblemDifficulty.LEGENDARY:
-        return [1600, Infinity];
+        return [1300, Infinity];
     }
   }
 
@@ -99,12 +99,12 @@ export class AtcoderService implements ExternalProblemsFetcherService {
 
       // the shuffle ensures we get a different output every time
       for (const [key, value] of Object.entries(this.shuffleObjectKeys(this.atcoderProblemModel))) {
+        if (problems.length === numProblems) return problems;
         if (min <= value.difficulty && value.difficulty <= max) {
           const dto = new CreateProblemDTO();
           dto.difficulties = [difficulty];
           dto.url = `https://atcoder.jp/contests/${this.atcoderProblems.find((p) => p.id === key).contest_id}/tasks/${key}`;
           problems.push(dto);
-          if (problems.length === numProblems) return problems;
         }
       }
       return problems;

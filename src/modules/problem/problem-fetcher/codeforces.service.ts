@@ -38,15 +38,15 @@ export class CodeforcesService implements ExternalProblemsFetcherService {
   private getCodeforcesRange(difficulty: ProblemDifficulty): [number, number] {
     switch (difficulty) {
       case ProblemDifficulty.APPRENTICE:
-        return [800, 1199];
+        return [800, 1099];
       case ProblemDifficulty.JOURNEYMAN:
-        return [1200, 1499];
+        return [1100, 1299];
       case ProblemDifficulty.ADEPT:
-        return [1500, 1799];
+        return [1300, 1599];
       case ProblemDifficulty.ELITE:
-        return [1800, 2299];
+        return [1600, 1999];
       case ProblemDifficulty.LEGENDARY:
-        return [2300, Infinity];
+        return [2000, Infinity];
     }
   }
 
@@ -71,12 +71,12 @@ export class CodeforcesService implements ExternalProblemsFetcherService {
 
       // the shuffle ensures we get a different output every time
       for (const problem of this.shuffleArray(this.codeforcesProblems)) {
+        if (problems.length === numProblems) return problems;
         if (min <= problem.points && problem.points <= max) {
           const dto = new CreateProblemDTO();
           dto.difficulties = [difficulty];
           dto.url = `https://codeforces.com/contest/${problem.contestId}/problem/${problem.index}`;
           problems.push(dto);
-          if (problems.length === numProblems) return problems;
         }
       }
       return problems;

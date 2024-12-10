@@ -10,6 +10,7 @@ import { Contest } from './entities/contest.entity';
 import { ContestProblem } from './entities/contest-problem.entity';
 import { ContestsRepository } from './repositories/contest.repository';
 import { ProblemFetcherService } from './problem-fetcher/problem-fetcher.service';
+import { DifficultiesDistributionDTO } from './dto/difficulties-distribution.dto';
 
 @Injectable()
 export class ProblemService {
@@ -19,25 +20,22 @@ export class ProblemService {
     private readonly contestsRepository: ContestsRepository,
   ) {}
 
-  private getProblemQuantityByDifficulty(difficulty: ProblemDifficulty) {
-    if (difficulty === ProblemDifficulty.APPRENTICE) return 3;
-    if (difficulty === ProblemDifficulty.JOURNEYMAN) return 1;
-    if (difficulty === ProblemDifficulty.ADEPT) return 2;
-    if (difficulty === ProblemDifficulty.ELITE) return 1;
-    if (difficulty === ProblemDifficulty.LEGENDARY) return 3;
-  }
-
   /**
    * Gets the problem's source enum element if it matches, UNKNOWN if none match
    * @param problemUrl The problem's url
    * @returns The problem's source enum element
    */
   getProblemSource(problemUrl: string): ProblemSource {
-    const host = new URL(problemUrl).hostname.toLowerCase();
-    const match = Object.values(ProblemSource).find((v) => v === host);
-
-    // if no known problem source matches the url, source is marked as unknown
-    return match || ProblemSource.UNKNOWN;
+    try {
+      const host = new URL(problemUrl).hostname.toLowerCase();
+      const match = Object.values(ProblemSource).find((v) => v === host);
+      // if no known problem source matches the url, source is marked as unknown
+      return match || ProblemSource.UNKNOWN;
+    } catch (e) {
+      throw new BusinessException(ErrorCode.INVALID_PARAMETERS, HttpStatus.BAD_REQUEST, {
+        message: 'Invalid problem URL',
+      });
+    }
   }
 
   /**
@@ -96,7 +94,7 @@ export class ProblemService {
    * If it fails in fetching, then it fetches from Atcoder and Codeforces APIs. If event that fails, throws an descriptive error
    * @returns a promise that resolves in the constest data, including the selected problems
    */
-  async createContest(): Promise<Contest> {
+  async createContest(difficulties: DifficultiesDistributionDTO): Promise<Contest> {
     const contest = new Contest();
     contest.isConfirmed = false;
     await this.contestsRepository.insert(contest);
@@ -104,11 +102,11 @@ export class ProblemService {
 
     await Promise.all(
       Object.values(ProblemDifficulty).map(async (diff) => {
-        const qty = this.getProblemQuantityByDifficulty(diff);
+        const qty = difficulties[diff.toLowerCase()];
         let problems = await this.problemsRepository.findManyByDifficulty(diff, qty);
         // if there ain't enough problems on the repository, fetch some random problems and register them
         if (problems.length < qty) {
-          const problemsDtos = await this.fetchProblems(diff, qty);
+          const problemsDtos = await this.problemFetcherService.fetchProblems(diff, qty);
           problems = await Promise.all(problemsDtos.map((problem) => this.createProblem(problem)));
         }
         contestProblems.push(
@@ -128,10 +126,6 @@ export class ProblemService {
     );
     contest.contestProblems = contestProblems;
     return contest;
-  }
-
-  private async fetchProblems(diff: ProblemDifficulty, numProblems: number): Promise<CreateProblemDTO[]> {
-    return this.problemFetcherService.fetchProblems(diff, numProblems);
   }
 
   /**
@@ -168,6 +162,11 @@ export class ProblemService {
     );
   }
 
+  /**
+   * Disconfirms a contest
+   * @param id the contest to be disconfirmed
+   * @returns a promise that resolves when the contest is disconfirmed
+   */
   async disconfirmContest(id: number): Promise<void> {
     const contest = await this.contestsRepository.findById(id);
 
